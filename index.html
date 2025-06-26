@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Fire Diamond Top-Up</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #1c1e21; line-height: 1.5; }
+        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 0; min-height: 100vh; display: flex; flex-direction: column; }
+        header { background-color: #1877f2; color: white; padding: 15px 20px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        header img { max-height: 40px; vertical-align: middle; margin-right: 10px; border-radius: 50%;}
+        header h1 { margin: 0; font-size: 1.5em; display: inline; }
+        nav { background-color: #fff; border-bottom: 1px solid #ddd; padding: 10px; text-align: center; }
+        nav button, nav a { margin: 0 5px; padding: 8px 12px; background-color: #e4e6eb; color: #050505; border: none; cursor: pointer; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        nav button:hover, nav a:hover { background-color: #d1d3d6;}
+        .screen { display: none; padding: 20px; flex-grow: 1; overflow-y: auto; }
+        .active-screen { display: block; }
+        .package-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top:15px; }
+        .package-card { border: 1px solid #ddd; padding: 15px; text-align: center; background-color: #f7f8fa; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .package-card h3 { margin-top: 0; font-size: 1.1em; color: #050505; }
+        .package-card .price { font-weight: bold; color: #38a169; margin: 5px 0; }
+        .package-card button { background-color: #1877f2; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; margin-top: 10px; border-radius: 6px; font-weight: 600; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #606770; }
+        .form-group input, .form-group select { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 1em; }
+        .form-group textarea { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccd0d5; border-radius: 6px; min-height: 80px; font-size: 1em; }
+        .error { color: #fa383e; font-size: 0.9em; margin-top: 5px; }
+        .payment-number { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #dddfe2; margin-bottom: 8px; border-radius: 6px; background-color: #f7f8fa; }
+        .payment-number span { flex-grow: 1; font-weight: 500; }
+        .copy-btn { padding: 6px 10px; font-size: 0.8em; background-color: #e4e6eb; color: #050505; border:none; border-radius: 4px; }
+        .invoice-details p, .static-content p { margin: 8px 0; color: #050505; }
+        .invoice-details strong, .static-content strong { color: #050505; }
+        #settingsIcon { font-size: 24px; cursor: pointer; position: absolute; top: 18px; left: 20px; z-index: 1001; color: white; }
+        .order-item { background-color: #f7f8fa; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #dddfe2; }
+        .order-item h4 { margin-top: 0; margin-bottom: 8px; }
+        .order-status { padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; font-size: 0.9em; display: inline-block; }
+        .status-Pending { background-color: #ffc107; color: #212529;}
+        .status-Processing { background-color: #17a2b8; }
+        .status-Completed { background-color: #28a745; }
+        .status-Failed { background-color: #dc3545; }
+        .auth-toggle { color: #1877f2; cursor: pointer; text-decoration: underline; margin-top:10px; display:inline-block; }
+        .main-action-button { background-color: #1877f2; color: white; border: none; padding: 12px 20px; font-size: 1em; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 10px; }
+        .main-action-button:hover { background-color: #166fe5; }
+        .secondary-button { background-color: #e4e6eb; color: #050505; }
+        .secondary-button:hover { background-color: #d1d3d6; }
+        .content-section { padding: 15px; background-color: #fff; margin: 10px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .content-section h2 { margin-top:0; color: #1877f2;}
+        .loader { text-align: center; padding: 20px; font-size: 1.2em; color: #606770;}
+        ul.settings-list { list-style: none; padding: 0;}
+        ul.settings-list li a { display: block; padding: 12px 15px; color: #050505; text-decoration: none; border-bottom: 1px solid #eee; }
+        ul.settings-list li a:hover { background-color: #f0f2f5; }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div id="settingsIcon" onclick="showScreen('settingsScreen')">☰</div>
+
+    <div class="container">
+        <header>
+            <img id="appLogo" src="https://via.placeholder.com/40?text=FF" alt="Logo">
+            <h1 id="appName">FF Diamond TopUp</h1>
+        </header>
+
+        <!-- Auth Screen (Login/Register) -->
+        <div id="authScreen" class="screen active-screen">
+            <div id="loginForm" class="content-section">
+                <h2>লগইন করুন</h2>
+                <div class="form-group">
+                    <label for="loginEmail">ইমেইল:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">পাসওয়ার্ড:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button onclick="loginUser()" class="main-action-button">লগইন</button>
+                <p>অ্যাকাউন্ট নেই? <span class="auth-toggle" onclick="toggleAuthForms()">রেজিস্ট্রেশন করুন</span></p>
+                <p id="loginError" class="error"></p>
+            </div>
+            <div id="registerForm" style="display:none;" class="content-section">
+                <h2>রেজিস্ট্রেশন করুন</h2>
+                 <div class="form-group">
+                    <label for="registerName">আপনার নাম:</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPhone">মোবাইল নম্বর:</label>
+                    <input type="tel" id="registerPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">ইমেইল:</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর):</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button onclick="registerUser()" class="main-action-button">রেজিস্ট্রেশন</button>
+                <p>ইতিমধ্যে অ্যাকাউন্ট আছে? <span class="auth-toggle" onclick="toggleAuthForms()">লগইন করুন</span></p>
+                <p id="registerError" class="error"></p>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="homeScreen" class="screen">
+            <nav>
+                <span id="loggedInUserEmail" style="font-weight:bold; margin-right:15px; color:#606770;"></span>
+                <button onclick="showScreen('userOrdersScreen')">আমার অর্ডার</button>
+                <button onclick="logoutUser()" class="secondary-button">লগআউট</button>
+            </nav>
+            <div class="content-section">
+                <h3>জনপ্রিয় প্যাকেজসমূহ</h3>
+                <div id="packageList" class="package-list">
+                    <div class="loader">প্যাকেজ লোড হচ্ছে...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diamond Order Form Screen -->
+        <div id="orderFormScreen" class="screen">
+             <div class="content-section">
+                <h2>অর্ডার ফর্ম</h2>
+                <p><strong>প্যাকেজ:</strong> <span id="orderPackageName"></span> (<span id="orderPackageDiamonds"></span>💎)</p>
+                <p><strong>মূল্য:</strong> <span id="orderPackagePrice"></span> টাকা</p>
+                <hr>
+                <h3>পেমেন্ট করার নম্বর:</h3>
+                <div id="paymentNumbersOrderForm">
+                    <div class="loader">পেমেন্ট নম্বর লোড হচ্ছে...</div>
+                </div>
+                <hr>
+                <form id="diamondOrderForm">
+                    <input type="hidden" id="selectedPackageId">
+                    <div class="form-group">
+                        <label for="ffUID">আপনার Free Fire UID:</label>
+                        <input type="number" id="ffUID" placeholder="उदा: 1234567890" required>
+                        <small id="ffUIDError" class="error"></small>
+                    </div>
+                     <div class="form-group">
+                        <label for="orderUserName">আপনার নাম (অপরিবর্তনযোগ্য):</label>
+                        <input type="text" id="orderUserName" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderUserPhone">আপনার মোবাইল নম্বর (অপরিবর্তনযোগ্য):</label>
+                        <input type="tel" id="orderUserPhone" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionID">ট্রানজেকশন আইডি (Transaction ID):</label>
+                        <input type="text" id="transactionID" placeholder="उदा: BKASH TrxID 9X3Y7Z" required>
+                        <small id="transactionIDError" class="error"></small>
+                    </div>
+                     <div class="form-group">
+                        <label for="paymentSenderLastFour">যে নম্বর থেকে টাকা পাঠিয়েছেন তার শেষের ৪ টি সংখ্যা:</label>
+                        <input type="text" id="paymentSenderLastFour" maxlength="4" pattern="\d{4}" placeholder="उदा: 1234" required>
+                        <small id="paymentSenderLastFourError" class="error"></small>
+                    </div>
+                    <button type="button" onclick="confirmOrder()" class="main-action-button">অর্ডার কনফার্ম করুন</button>
+                    <button type="button" onclick="showScreen('homeScreen')" class="main-action-button secondary-button" style="margin-top:8px;">বাতিল</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- User Orders Screen -->
+        <div id="userOrdersScreen" class="screen">
+            <div class="content-section">
+                <h2>আমার সকল অর্ডার</h2>
+                <button onclick="showScreen('homeScreen')" class="main-action-button secondary-button" style="margin-bottom:15px;">হোমপেজে ফিরে যান</button>
+                <div id="myOrdersList">
+                    <div class="loader">অর্ডার লোড হচ্ছে...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoice Screen -->
+        <div id="invoiceScreen" class="screen">
+            <div class="content-section">
+                <h2>অর্ডার রশিদ (ইনভয়েস)</h2>
+                <div id="invoiceDetails">
+                    <!-- Invoice content will be here -->
+                </div>
+                <button onclick="showScreen('userOrdersScreen')" class="main-action-button secondary-button" style="margin-top:15px;">আমার অর্ডারে ফিরে যান</button>
+            </div>
+        </div>
+
+        <!-- Settings Screen (Accessible via ☰ icon) -->
+        <div id="settingsScreen" class="screen">
+            <div class="content-section">
+                <h2>সেটিংস</h2>
+                <ul class="settings-list">
+                    <li><a href="#" onclick="showScreen('paymentInfoPage'); return false;">পেমেন্টের তথ্য</a></li>
+                    <li><a href="#" onclick="showScreen('howToOrderPage'); return false;">কিভাবে অর্ডার করবেন</a></li>
+                    <li><a href="#" onclick="showScreen('helpPage'); return false;">সাহায্য/কাস্টমার সাপোর্ট</a></li>
+                    <li><a href="#" onclick="showScreen('aboutContactPage'); return false;">আমাদের সম্পর্কে/যোগাযোগ</a></li>
+                </ul>
+                <button onclick="goBackToPreviousScreenFromSettings()" class="main-action-button secondary-button" style="margin-top:15px;">হোমপেজে ফিরে যান</button>
+            </div>
+        </div>
+
+        <!-- Static Content Pages -->
+        <div id="paymentInfoPage" class="screen static-content">
+             <div class="content-section">
+                <h2>পেমেন্টের তথ্য</h2>
+                <div id="staticPaymentInfo">
+                    <p>পেমেন্ট সংক্রান্ত তথ্য এখানে অ্যাডমিন প্যানেল থেকে লোড হবে।</p>
+                </div>
+                <button onclick="showScreen('settingsScreen')" class="main-action-button secondary-button" style="margin-top:15px;">সেটিংসে ফিরে যান</button>
+            </div>
+        </div>
+        <div id="howToOrderPage" class="screen static-content">
+             <div class="content-section">
+                <h2>কিভাবে অর্ডার করবেন</h2>
+                <p id="howToOrderContent">১. প্রথমে আপনার পছন্দের ডায়মন্ড প্যাকেজ সিলেক্ট করুন।</p>
+                <p>২. "Buy Now" বাটনে ক্লিক করুন।</p>
+                <p>৩. প্রদর্শিত পেমেন্ট নম্বরে সঠিক পরিমাণ টাকা পাঠান।</p>
+                <p>৪. আপনার Free Fire UID, যে নম্বর থেকে টাকা পাঠিয়েছেন তার শেষ ৪ সংখ্যা এবং ট্রানজেকশন আইডি দিয়ে ফর্ম পূরণ করুন।</p>
+                <p>৫. "Confirm Order" বাটনে ক্লিক করুন। আপনার অর্ডার প্রসেস করা হবে।</p>
+                <button onclick="showScreen('settingsScreen')" class="main-action-button secondary-button" style="margin-top:15px;">সেটিংসে ফিরে যান</button>
+            </div>
+        </div>
+        <div id="helpPage" class="screen static-content">
+            <div class="content-section">
+                <h2>সাহায্য/কাস্টমার সাপোর্ট</h2>
+                <p id="helpContent">যেকোনো প্রয়োজনে আমাদের সাথে যোগাযোগ করুন:</p>
+                <p>ইমেইল: support@example.com</p>
+                <p>ফেসবুক পেজ: fb.com/examplepage</p>
+                <button onclick="showScreen('settingsScreen')" class="main-action-button secondary-button" style="margin-top:15px;">সেটিংসে ফিরে যান</button>
+            </div>
+        </div>
+        <div id="aboutContactPage" class="screen static-content">
+            <div class="content-section">
+                <h2>আমাদের সম্পর্কে/যোগাযোগ</h2>
+                <p id="aboutUsContent">আমরা একটি বিশ্বস্ত ডায়মন্ড টপ-আপ সেবা প্রদানকারী। দ্রুত এবং নিরাপদে ডায়মন্ড কিনুন আমাদের অ্যাপের মাধ্যমে।</p>
+                <p>যোগাযোগ: contact@example.com</p>
+                <button onclick="showScreen('settingsScreen')" class="main-action-button secondary-button" style="margin-top:15px;">সেটিংসে ফিরে যান</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCm2PulQfRpjmGcMBnsN2x4asWy86WaAfg",
+            authDomain: "message-819af.firebaseapp.com",
+            databaseURL: "https://message-819af-default-rtdb.firebaseio.com",
+            projectId: "message-819af",
+            storageBucket: "message-819af.appspot.com", // Ensure this is correct, .appspot.com or .firebasestorage.app
+            messagingSenderId: "694868877080",
+            appId: "1:694868877080:web:d80c0a342b71937b2fc86d",
+            measurementId: "G-RFN6DJQ0DR"
+        };
+
+        let firebaseApp, auth, db;
+        let currentUser = null;
+        let currentScreenId = 'authScreen'; // Default starting screen
+        const MAIN_APP_SCREEN_ID_AFTER_LOGIN = 'homeScreen';
+
+        function initializeFirebase() {
+            if (!firebase.apps.length) {
+                firebaseApp = firebase.initializeApp(firebaseConfig);
+            } else {
+                firebaseApp = firebase.app();
+            }
+            auth = firebase.auth();
+            db = firebase.database();
+
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    db.ref('users/' + currentUser.uid).once('value').then(snapshot => {
+                        const userData = snapshot.val();
+                        if (userData && userData.name) {
+                             document.getElementById('loggedInUserEmail').textContent = `স্বাগতম, ${userData.name}`;
+                        } else {
+                            document.getElementById('loggedInUserEmail').textContent = `স্বাগতম, ${currentUser.email}`;
+                        }
+                        if (userData) {
+                            document.getElementById('orderUserName').value = userData.name || '';
+                            document.getElementById('orderUserPhone').value = userData.phone || '';
+                        }
+                    });
+                    showScreen(MAIN_APP_SCREEN_ID_AFTER_LOGIN, true); // true for replaceState
+                    loadAppSettings();
+                    loadPackages();
+                    loadUserOrders();
+                    loadPaymentInfo();
+                    document.getElementById('settingsIcon').style.display = 'block';
+                } else {
+                    currentUser = null;
+                    showScreen('authScreen', true); // true for replaceState
+                    document.getElementById('settingsIcon').style.display = 'none';
+                    document.getElementById('packageList').innerHTML = '<div class="loader">প্যাকেজ লোড হচ্ছে...</div>';
+                    document.getElementById('myOrdersList').innerHTML = '<div class="loader">অর্ডার লোড হচ্ছে...</div>';
+                }
+            });
+        }
+
+        function showScreen(screenId, replaceHistory = false) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active-screen');
+            });
+            const targetScreen = document.getElementById(screenId);
+            if(targetScreen) {
+                targetScreen.classList.add('active-screen');
+            } else {
+                console.error("Screen not found: ", screenId);
+                document.getElementById(MAIN_APP_SCREEN_ID_AFTER_LOGIN).classList.add('active-screen'); // fallback
+                screenId = MAIN_APP_SCREEN_ID_AFTER_LOGIN;
+            }
+
+
+            if (currentScreenId !== screenId) {
+                if (replaceHistory) {
+                    history.replaceState({ screen: screenId }, `Screen ${screenId}`, `#${screenId}`);
+                } else {
+                    history.pushState({ screen: screenId }, `Screen ${screenId}`, `#${screenId}`);
+                }
+            }
+            currentScreenId = screenId;
+
+            if (screenId === 'authScreen') {
+                document.getElementById('settingsIcon').style.display = 'none';
+            } else if (currentUser) {
+                document.getElementById('settingsIcon').style.display = 'block';
+            }
+        }
+        
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.screen) {
+                const targetScreen = event.state.screen;
+                if (currentUser) { // User is logged in
+                    if (currentScreenId !== MAIN_APP_SCREEN_ID_AFTER_LOGIN && targetScreen !== currentScreenId) {
+                        // If on any sub-screen, back goes to home.
+                         showScreen(MAIN_APP_SCREEN_ID_AFTER_LOGIN, true); // Replace state to avoid loop if user spam back
+                         history.pushState({ screen: MAIN_APP_SCREEN_ID_AFTER_LOGIN }, `Screen ${MAIN_APP_SCREEN_ID_AFTER_LOGIN}`, `#${MAIN_APP_SCREEN_ID_AFTER_LOGIN}`); // Push home state back
+                    } else if (currentScreenId === MAIN_APP_SCREEN_ID_AFTER_LOGIN) {
+                        // On home screen, confirm exit
+                        if (confirm("আপনি কি অ্যাপ থেকে বের হতে চান?")) {
+                            logoutUser(); // Or some other exit behavior
+                        } else {
+                            // Prevent going back further by pushing the home state again
+                            history.pushState({ screen: MAIN_APP_SCREEN_ID_AFTER_LOGIN }, `Screen ${MAIN_APP_SCREEN_ID_AFTER_LOGIN}`, `#${MAIN_APP_SCREEN_ID_AFTER_LOGIN}`);
+                        }
+                    } else {
+                         showScreen(targetScreen, true); // Go to the screen in history state
+                    }
+                } else { // User is not logged in (on authScreen)
+                    if (currentScreenId !== 'authScreen' && targetScreen !== currentScreenId) {
+                         showScreen('authScreen', true);
+                         history.pushState({ screen: 'authScreen' }, `Screen authScreen`, `#authScreen`);
+                    } else if (currentScreenId === 'authScreen') {
+                         // On auth screen, if back is pressed, browser might try to go to previous website.
+                         // Or if it's the first page, do nothing. We can try to block this or just let it be.
+                         // For simplicity, we push the authScreen state again to prevent going "back" from it easily.
+                         history.pushState({ screen: 'authScreen' }, `Screen authScreen`, `#authScreen`);
+                    } else {
+                         showScreen(targetScreen, true);
+                    }
+                }
+            } else if (currentUser && currentScreenId !== MAIN_APP_SCREEN_ID_AFTER_LOGIN) {
+                 // No state, but logged in and not on home, go to home
+                 showScreen(MAIN_APP_SCREEN_ID_AFTER_LOGIN, true);
+                 history.pushState({ screen: MAIN_APP_SCREEN_ID_AFTER_LOGIN }, `Screen ${MAIN_APP_SCREEN_ID_AFTER_LOGIN}`, `#${MAIN_APP_SCREEN_ID_AFTER_LOGIN}`);
+            } else if (!currentUser && currentScreenId !== 'authScreen') {
+                 showScreen('authScreen', true);
+                 history.pushState({ screen: 'authScreen' }, `Screen authScreen`, `#authScreen`);
+            }
+            // If event.state is null, it might be the initial page load or user manually changed hash
+            // The authStateChanged usually handles the correct screen.
+        });
+
+        function goBackToPreviousScreenFromSettings() {
+             showScreen(MAIN_APP_SCREEN_ID_AFTER_LOGIN);
+        }
+
+        function toggleAuthForms() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginError = document.getElementById('loginError');
+            const registerError = document.getElementById('registerError');
+
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+            loginError.textContent = '';
+            registerError.textContent = '';
+        }
+
+        function registerUser() {
+            const name = document.getElementById('registerName').value;
+            const phone = document.getElementById('registerPhone').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorP = document.getElementById('registerError');
+            errorP.textContent = '';
+
+            if (!name || !phone || !email || !password) {
+                errorP.textContent = 'সবগুলো ফিল্ড পূরণ করুন।';
+                return;
+            }
+            if (password.length < 6) {
+                errorP.textContent = 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।';
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    const user = userCredential.user;
+                    // Store additional user info in Realtime Database
+                    db.ref('users/' + user.uid).set({
+                        name: name,
+                        phone: phone,
+                        email: email,
+                        registrationDate: new Date().toISOString()
+                    });
+                    user.updateProfile({ displayName: name }); // Update Firebase Auth profile
+                    alert('রেজিস্ট্রেশন সফল হয়েছে! দয়া করে লগইন করুন।');
+                    toggleAuthForms(); // Switch to login form
+                })
+                .catch(error => {
+                    console.error("Registration error:", error);
+                    if (error.code == 'auth/email-already-in-use') {
+                        errorP.textContent = 'এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট খোলা হয়েছে।';
+                    } else if (error.code == 'auth/weak-password') {
+                        errorP.textContent = 'পাসওয়ার্ডটি দুর্বল। শক্তিশালী পাসওয়ার্ড দিন।';
+                    } else {
+                        errorP.textContent = 'রেজিস্ট্রেশন ব্যর্থ হয়েছে: ' + error.message;
+                    }
+                });
+        }
+
+        function loginUser() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorP = document.getElementById('loginError');
+            errorP.textContent = '';
+
+            if (!email || !password) {
+                errorP.textContent = 'ইমেইল এবং পাসওয়ার্ড দিন।';
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    // Handled by onAuthStateChanged
+                })
+                .catch(error => {
+                    console.error("Login error:", error);
+                     if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                        errorP.textContent = 'ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।';
+                    } else {
+                        errorP.textContent = 'লগইন ব্যর্থ হয়েছে: ' + error.message;
+                    }
+                });
+        }
+
+        function logoutUser() {
+            auth.signOut().then(() => {
+                // Handled by onAuthStateChanged
+                // Clear user-specific data from UI if necessary
+                document.getElementById('packageList').innerHTML = '<div class="loader">প্যাকেজ লোড হচ্ছে...</div>';
+                document.getElementById('myOrdersList').innerHTML = '<div class="loader">অর্ডার লোড হচ্ছে...</div>';
+            }).catch(error => {
+                console.error("Logout error:", error);
+                alert('লগআউট করতে সমস্যা হয়েছে।');
+            });
+        }
+        
+        function loadAppSettings() {
+            db.ref('settings/appDetails').once('value').then(snapshot => {
+                const settings = snapshot.val();
+                if (settings) {
+                    if (settings.appName) document.getElementById('appName').textContent = settings.appName;
+                    if (settings.appLogo) document.getElementById('appLogo').src = settings.appLogo;
+                    if (settings.howToOrder) document.getElementById('howToOrderContent').innerHTML = settings.howToOrder.replace(/\n/g, '<br>');
+                    if (settings.helpSupport) document.getElementById('helpContent').innerHTML = settings.helpSupport.replace(/\n/g, '<br>');
+                    if (settings.aboutUs) document.getElementById('aboutUsContent').innerHTML = settings.aboutUs.replace(/\n/g, '<br>');
+                }
+            }).catch(err => console.error("Error loading app settings:", err));
+        }
+
+
+        function loadPackages() {
+            const packageListDiv = document.getElementById('packageList');
+            packageListDiv.innerHTML = '<div class="loader">প্যাকেজ লোড হচ্ছে...</div>'; // Show loader
+
+            db.ref('packages').orderByChild('price').on('value', snapshot => {
+                packageListDiv.innerHTML = ''; // Clear previous packages
+                if (snapshot.exists()) {
+                    snapshot.forEach(childSnapshot => {
+                        const packageId = childSnapshot.key;
+                        const packageData = childSnapshot.val();
+                        if (packageData.isActive === false) return; // Skip inactive packages
+
+                        const card = document.createElement('div');
+                        card.className = 'package-card';
+                        card.innerHTML = `
+                            <h3>${packageData.name} (${packageData.diamonds}💎)</h3>
+                            <div class="price">${packageData.price} টাকা</div>
+                            <button onclick="showOrderForm('${packageId}', '${packageData.name}', ${packageData.diamonds}, ${packageData.price})">Buy Now</button>
+                        `;
+                        packageListDiv.appendChild(card);
+                    });
+                } else {
+                    packageListDiv.innerHTML = '<p>কোনো প্যাকেজ পাওয়া যায়নি।</p>';
+                }
+            }, error => {
+                console.error("Error loading packages: ", error);
+                packageListDiv.innerHTML = '<p>প্যাকেজ লোড করতে সমস্যা হয়েছে।</p>';
+            });
+        }
+
+        function showOrderForm(packageId, name, diamonds, price) {
+            document.getElementById('selectedPackageId').value = packageId;
+            document.getElementById('orderPackageName').textContent = name;
+            document.getElementById('orderPackageDiamonds').textContent = diamonds;
+            document.getElementById('orderPackagePrice').textContent = price;
+            // UID from previous order if any? For now, keep it blank or prefill if needed.
+            // document.getElementById('ffUID').value = ''; // Clear previous UID
+            document.getElementById('transactionID').value = '';
+            document.getElementById('paymentSenderLastFour').value = '';
+            showScreen('orderFormScreen');
+        }
+
+        function loadPaymentInfo() {
+            const paymentNumbersOrderDiv = document.getElementById('paymentNumbersOrderForm');
+            const staticPaymentInfoDiv = document.getElementById('staticPaymentInfo');
+            paymentNumbersOrderDiv.innerHTML = '<div class="loader">পেমেন্ট নম্বর লোড হচ্ছে...</div>';
+            staticPaymentInfoDiv.innerHTML = '<div class="loader">পেমেন্ট তথ্য লোড হচ্ছে...</div>';
+
+            db.ref('payment_info').on('value', snapshot => {
+                paymentNumbersOrderDiv.innerHTML = '';
+                staticPaymentInfoDiv.innerHTML = '';
+                if (snapshot.exists()) {
+                    const paymentMethods = snapshot.val();
+                    for (const method in paymentMethods) {
+                        if (paymentMethods[method] && paymentMethods[method].number && paymentMethods[method].type !== 'instructions') { // Ensure number exists
+                            const pDiv = document.createElement('div');
+                            pDiv.className = 'payment-number';
+                            pDiv.innerHTML = `
+                                <span>${paymentMethods[method].type}: <strong>${paymentMethods[method].number}</strong> (${paymentMethods[method].accountType || 'Personal'})</span>
+                                <button class="copy-btn" onclick="copyToClipboard('${paymentMethods[method].number}')">কপি</button>
+                            `;
+                            paymentNumbersOrderDiv.appendChild(pDiv.cloneNode(true)); // Clone for order form
+                            staticPaymentInfoDiv.appendChild(pDiv); // Original for static page
+                        } else if (paymentMethods[method] && paymentMethods[method].instructions) {
+                             const pInst = document.createElement('p');
+                             pInst.innerHTML = `<strong>${method}:</strong> ${paymentMethods[method].instructions.replace(/\n/g, '<br>')}`;
+                             staticPaymentInfoDiv.appendChild(pInst);
+                        }
+                    }
+                } else {
+                    const noInfoMsg = '<p>কোনো পেমেন্ট নম্বর পাওয়া যায়নি।</p>';
+                    paymentNumbersOrderDiv.innerHTML = noInfoMsg;
+                    staticPaymentInfoDiv.innerHTML = noInfoMsg;
+                }
+            }, error => {
+                console.error("Error loading payment info: ", error);
+                const errorMsg = '<p>পেমেন্ট তথ্য লোড করতে সমস্যা হয়েছে।</p>';
+                paymentNumbersOrderDiv.innerHTML = errorMsg;
+                staticPaymentInfoDiv.innerHTML = errorMsg;
+            });
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('নম্বর কপি করা হয়েছে: ' + text);
+            }).catch(err => {
+                console.error('Copy failed', err);
+                alert('কপি করতে সমস্যা হয়েছে।');
+            });
+        }
+
+        function validateOrderForm() {
+            let isValid = true;
+            const ffUID = document.getElementById('ffUID').value;
+            const transactionID = document.getElementById('transactionID').value;
+            const paymentSenderLastFour = document.getElementById('paymentSenderLastFour').value;
+
+            document.getElementById('ffUIDError').textContent = '';
+            document.getElementById('transactionIDError').textContent = '';
+            document.getElementById('paymentSenderLastFourError').textContent = '';
+
+            if (!ffUID || !/^\d{8,12}$/.test(ffUID)) { // Basic UID validation (8-12 digits)
+                document.getElementById('ffUIDError').textContent = 'সঠিক Free Fire UID দিন (৮-১২ সংখ্যা)।';
+                isValid = false;
+            }
+            if (!transactionID || transactionID.length < 5) { // Basic TrxID validation
+                document.getElementById('transactionIDError').textContent = 'সঠিক ট্রানজেকশন আইডি দিন।';
+                isValid = false;
+            }
+             if (!paymentSenderLastFour || !/^\d{4}$/.test(paymentSenderLastFour)) {
+                document.getElementById('paymentSenderLastFourError').textContent = 'নম্বরের শেষ ৪টি সংখ্যা দিন।';
+                isValid = false;
+            }
+            return isValid;
+        }
+
+        function confirmOrder() {
+            if (!validateOrderForm()) return;
+            if (!currentUser) {
+                alert('অর্ডার করার জন্য অনুগ্রহ করে লগইন করুন।');
+                showScreen('authScreen');
+                return;
+            }
+
+            const orderData = {
+                userId: currentUser.uid,
+                userName: document.getElementById('orderUserName').value,
+                userPhone: document.getElementById('orderUserPhone').value,
+                packageId: document.getElementById('selectedPackageId').value,
+                packageName: document.getElementById('orderPackageName').textContent,
+                packageDiamonds: parseInt(document.getElementById('orderPackageDiamonds').textContent),
+                packagePrice: parseFloat(document.getElementById('orderPackagePrice').textContent),
+                ffUID: document.getElementById('ffUID').value,
+                transactionID: document.getElementById('transactionID').value,
+                paymentSenderLastFour: document.getElementById('paymentSenderLastFour').value,
+                orderTimestamp: firebase.database.ServerValue.TIMESTAMP,
+                status: 'Pending', // Initial status
+                orderIdNumeric: 0 // Placeholder, will be set by transaction
+            };
+
+            // Generate a unique numeric Order ID starting from 1001
+            const orderCounterRef = db.ref('counters/lastOrderId');
+            orderCounterRef.transaction(currentCount => {
+                return (currentCount || 1000) + 1;
+            }).then(result => {
+                if (!result.committed) {
+                    throw new Error("Failed to generate order ID.");
+                }
+                orderData.orderIdNumeric = result.snapshot.val();
+                
+                const newOrderKey = db.ref('orders').push().key;
+                return db.ref('orders/' + newOrderKey).set(orderData);
+            })
+            .then(() => {
+                alert(`অর্ডার #${orderData.orderIdNumeric} সফলভাবে জমা হয়েছে! স্ট্যাটাস শীঘ্রই আপডেট করা হবে।`);
+                document.getElementById('diamondOrderForm').reset();
+                // Fetch user data again to ensure name/phone are up-to-date for next order
+                 db.ref('users/' + currentUser.uid).once('value').then(snapshot => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        document.getElementById('orderUserName').value = userData.name || '';
+                        document.getElementById('orderUserPhone').value = userData.phone || '';
+                    }
+                });
+                showScreen('userOrdersScreen');
+                loadUserOrders(); // Refresh orders list
+            }).catch(error => {
+                console.error("Order submission error: ", error);
+                alert('অর্ডার জমা দিতে সমস্যা হয়েছে: ' + error.message);
+            });
+        }
+
+        function loadUserOrders() {
+            if (!currentUser) return;
+            const ordersListDiv = document.getElementById('myOrdersList');
+            ordersListDiv.innerHTML = '<div class="loader">অর্ডার লোড হচ্ছে...</div>';
+
+            db.ref('orders').orderByChild('userId').equalTo(currentUser.uid).on('value', snapshot => {
+                ordersListDiv.innerHTML = '';
+                if (snapshot.exists()) {
+                    let orders = [];
+                    snapshot.forEach(childSnapshot => {
+                        orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    });
+                    // Sort by timestamp descending (newest first)
+                    orders.sort((a, b) => b.orderTimestamp - a.orderTimestamp);
+
+                    orders.forEach(order => {
+                        const orderDiv = document.createElement('div');
+                        orderDiv.className = 'order-item';
+                        orderDiv.innerHTML = `
+                            <h4>অর্ডার #${order.orderIdNumeric || order.id.slice(-6)} - ${order.packageName} (${order.packageDiamonds}💎)</h4>
+                            <p>Free Fire UID: ${order.ffUID}</p>
+                            <p>মূল্য: ${order.packagePrice} টাকা</p>
+                            <p>অর্ডারের সময়: ${new Date(order.orderTimestamp).toLocaleString('bn-BD')}</p>
+                            <p>স্ট্যাটাস: <span class="order-status status-${order.status}">${order.status}</span></p>
+                            ${order.status === 'Completed' ? `<button onclick="viewInvoice('${order.id}')" class="main-action-button secondary-button" style="padding: 6px 10px; font-size: 0.9em; margin-top:5px;">ইনভয়েস দেখুন</button>` : ''}
+                        `;
+                        ordersListDiv.appendChild(orderDiv);
+                        
+                        // Listen for live status updates for this specific order
+                        db.ref('orders/' + order.id + '/status').on('value', statusSnapshot => {
+                            const newStatus = statusSnapshot.val();
+                            if (newStatus) {
+                                const statusSpan = orderDiv.querySelector('.order-status');
+                                statusSpan.textContent = newStatus;
+                                statusSpan.className = `order-status status-${newStatus}`;
+                                // If status changed to Completed, show invoice button if not already there
+                                if (newStatus === 'Completed' && !orderDiv.querySelector('button[onclick*="viewInvoice"]')) {
+                                    const invoiceButton = document.createElement('button');
+                                    invoiceButton.textContent = 'ইনভয়েস দেখুন';
+                                    invoiceButton.className = "main-action-button secondary-button";
+                                    invoiceButton.style.cssText = "padding: 6px 10px; font-size: 0.9em; margin-top:5px;";
+                                    invoiceButton.onclick = () => viewInvoice(order.id);
+                                    orderDiv.appendChild(invoiceButton);
+                                } else if (newStatus !== 'Completed' && orderDiv.querySelector('button[onclick*="viewInvoice"]')) {
+                                    orderDiv.querySelector('button[onclick*="viewInvoice"]').remove();
+                                }
+                            }
+                        });
+                    });
+                } else {
+                    ordersListDiv.innerHTML = '<p>আপনার কোনো অর্ডার পাওয়া যায়নি।</p>';
+                }
+            }, error => {
+                console.error("Error loading user orders: ", error);
+                ordersListDiv.innerHTML = '<p>অর্ডার লোড করতে সমস্যা হয়েছে।</p>';
+            });
+        }
+
+        function viewInvoice(orderId) {
+            db.ref('orders/' + orderId).once('value').then(snapshot => {
+                const order = snapshot.val();
+                if (order) {
+                    const invoiceDetailsDiv = document.getElementById('invoiceDetails');
+                    invoiceDetailsDiv.innerHTML = `
+                        <p><strong>অর্ডার আইডি:</strong> ${order.orderIdNumeric || orderId.slice(-6)}</p>
+                        <p><strong>Free Fire UID:</strong> ${order.ffUID}</p>
+                        <p><strong>নাম:</strong> ${order.userName}</p>
+                        <p><strong>প্যাকেজ:</strong> ${order.packageName} (${order.packageDiamonds}💎)</p>
+                        <p><strong>পরিমাণ:</strong> ${order.packagePrice} টাকা</p>
+                        <p><strong>পেমেন্ট মাধ্যম:</strong> (ম্যানুয়াল - ট্রানজেকশন আইডি: ${order.transactionID})</p>
+                        <p><strong>অর্ডারের তারিখ:</strong> ${new Date(order.orderTimestamp).toLocaleString('bn-BD')}</p>
+                        <p><strong>স্ট্যাটাস:</strong> ${order.status}</p>
+                    `;
+                    showScreen('invoiceScreen');
+                } else {
+                    alert('ইনভয়েস খুঁজে পাওয়া যায়নি।');
+                }
+            }).catch(error => {
+                console.error("Error loading invoice:", error);
+                alert('ইনভয়েস লোড করতে সমস্যা হয়েছে।');
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+            // Set initial history state based on whether user is logged in or not (handled by onAuthStateChanged)
+            // But we need a base hash for popstate to work correctly on first load.
+            if (!window.location.hash) {
+                history.replaceState({ screen: 'authScreen' }, 'Auth', '#authScreen');
+            } else {
+                // If there's a hash, assume it's the current screen.
+                // onAuthStateChanged will correct if needed (e.g. #homeScreen but not logged in)
+                currentScreenId = window.location.hash.substring(1);
+                 // Ensure the screen actually exists
+                if(!document.getElementById(currentScreenId)){
+                    currentScreenId = 'authScreen'; // Fallback
+                    history.replaceState({ screen: currentScreenId }, `Screen ${currentScreenId}`, `#${currentScreenId}`);
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
